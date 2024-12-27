@@ -1,4 +1,3 @@
-```markdown
 # JSDev Docker Image
 
 ![Docker Pulls](https://img.shields.io/docker/pulls/brakmic/jsdev)
