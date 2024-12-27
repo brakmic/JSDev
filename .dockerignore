@@ -1,0 +1,48 @@
+# Node.js dependencies
+node_modules/
+# Optional npm cache
+.npm/
+
+# Logs
+logs/
+*.log
+
+# Docker files
+Dockerfile
+.dockerignore
+
+# Git repository
+.git/
+.gitignore
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Testing directories
+coverage/
+*.lcov
+
+# Environment variables
+.env
+.env.test
+.env.production
+
+# Miscellaneous
+*.tgz
+*.zip
+*.tar
+*.bak
+*.tmp
+
+# Build directories
+dist/
+build/
