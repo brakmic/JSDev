@@ -22,7 +22,22 @@ RUN install -m 0755 -d /etc/apt/keyrings \
     && rm -rf /var/lib/apt/lists/*
 
 ###############################################################################
-# (4) Add existing user to the Docker group
+# (4) Install libraries for Puppeteer
+###############################################################################
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libnss3 \
+        libatk1.0-0 \
+        libatk-bridge2.0-0 \
+        libcups2 \
+        libdrm2 \
+        libxkbcommon0 \
+        libgbm1 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+###############################################################################
+# (5) Add existing user to the Docker group
 ###############################################################################
 RUN groupadd -f docker \
     && usermod -aG docker jsdev
@@ -35,6 +50,6 @@ RUN mkdir -p /home/jsdev/.docker \
 USER jsdev
 
 ###############################################################################
-# (17) Set default command to start an interactive bash shell
+# (6) Set default command to start an interactive bash shell
 ###############################################################################
 CMD ["bash", "-i"]
