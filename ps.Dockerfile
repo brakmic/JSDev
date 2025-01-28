@@ -128,6 +128,16 @@ RUN install -m 0755 -d /etc/apt/keyrings \
 RUN bash -c "source $NVM_DIR/nvm.sh && npm install -g purescript spago"
 
 # ==============================
+# Install lsd
+# ==============================
+RUN ARCH=$(dpkg --print-architecture) && \
+    wget "https://github.com/lsd-rs/lsd/releases/download/v1.1.5/lsd_1.1.5_${ARCH}.deb" -O /tmp/lsd.deb && \
+    apt-get update && \
+    apt-get install -y /tmp/lsd.deb && \
+    rm /tmp/lsd.deb && \
+    lsd --version
+
+# ==============================
 # Create a Non-Root User (psdev)
 # ==============================
 RUN useradd -m -s /bin/bash ${NONROOT_USER} \
@@ -174,9 +184,9 @@ RUN echo 'export NVM_DIR=/usr/local/nvm' >> ${HOME}/.bashrc && \
 # Add Shell Aliases
 # ==============================
 RUN printf '\
-alias ll="ls -la"\n\
-alias la="ls -A"\n\
-alias l="ls -CF"\n\
+alias ll="lsd -la"\n\
+alias la="lsd -A"\n\
+alias l="lsd"\n\
 alias gs="git status"\n\
 alias ga="git add"\n\
 alias gp="git push"\n\
