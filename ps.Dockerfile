@@ -125,7 +125,7 @@ RUN install -m 0755 -d /etc/apt/keyrings \
 # ==============================
 # Install PureScript and Spago
 # ==============================
-RUN bash -c "source $NVM_DIR/nvm.sh && npm install -g purescript spago"
+RUN bash -c "source $NVM_DIR/nvm.sh && npm install -g purescript spago@next"
 
 # ==============================
 # Install lsd
