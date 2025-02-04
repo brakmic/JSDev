@@ -103,7 +103,7 @@ RUN mkdir -p $NVM_DIR && \
              nvm alias default $NODE_VERSION && \
              nvm use default && \
              node -v && npm -v && \
-             npm install -g typescript ts-node eslint prettier node-gyp"
+             npm install -g typescript tsx eslint prettier node-gyp"
 
 # ==============================
 # Install Docker
