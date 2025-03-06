@@ -1,7 +1,7 @@
 FROM ubuntu:22.04
 
 # (1) Set environment variables for pnpm
-ARG PNPM_VERSION=9.15.1
+ARG PNPM_VERSION=10.5.2
 ENV PNPM_VERSION=${PNPM_VERSION}
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH:/usr/local/bin
