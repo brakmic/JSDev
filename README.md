@@ -56,6 +56,10 @@ docker run -it -v /var/run/docker.sock:/var/run/docker.sock brakmic/jsdev-docker
 
 Docker-in-Docker is also possible when the container runs privileged.
 
+The container runs as UID 1000. On Linux hosts, make sure the mounted project
+directory is writable by that UID; Docker Desktop on Windows and macOS maps file
+ownership automatically.
+
 ## Image tags
 
 Both images are published with these tags:
