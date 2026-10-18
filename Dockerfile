@@ -1,10 +1,20 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
+
+ARG JSDEV_IMAGE_REVISION=local
+ARG JSDEV_VERSION=1.0.0
+
+LABEL org.opencontainers.image.title="jsdev" \
+      org.opencontainers.image.description="JavaScript and TypeScript development image with Node.js, pnpm, and common global tools" \
+      org.opencontainers.image.source="https://github.com/brakmic/JSDev" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.version="${JSDEV_VERSION}" \
+      org.opencontainers.image.revision="${JSDEV_IMAGE_REVISION}"
 
 # (1) Set environment variables for pnpm
-ARG PNPM_VERSION=10.5.2
+ARG PNPM_VERSION=12.14.0
 ENV PNPM_VERSION=${PNPM_VERSION}
 ENV PNPM_HOME=/pnpm
-ENV PATH=$PNPM_HOME:$PATH:/usr/local/bin
+ENV PATH=$PNPM_HOME/bin:$PNPM_HOME:$PATH:/usr/local/bin
 
 # Configure default system locale settings
 ENV LANG=en_US.UTF-8
@@ -33,7 +43,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git-lfs \
     python3 \
     python3-pip \
-    python3-distutils \
     bash-completion \
     locales \
     && rm -rf /var/lib/apt/lists/*
@@ -41,7 +50,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ###############################################################################
 # (3) Install Node.js
 ###############################################################################
-RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && apt-get install -y nodejs
 
 ###############################################################################
@@ -54,13 +63,14 @@ RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && \
 # (5) Install pnpm package manager
 ###############################################################################
 RUN curl -fsSL https://get.pnpm.io/install.sh | bash -s -- --version $PNPM_VERSION \
-    && ln -s $PNPM_HOME/pnpm /usr/local/bin/pnpm \
+    && ln -sf $PNPM_HOME/bin/pnpm /usr/local/bin/pnpm \
     && pnpm -v
 
 ###############################################################################
 # (6) Install global Node.js/TypeScript development tools
 ###############################################################################
-RUN pnpm add -g typescript ts-node eslint prettier node-gyp
+RUN pnpm add -g typescript@5 ts-node@10 tsx@4 eslint@9 prettier@3 node-gyp@13 \
+    && pnpm store prune
 
 ###############################################################################
 # (7) Install nano syntax highlighting
@@ -73,9 +83,13 @@ RUN mkdir -p /usr/share/nano-syntax \
 ###############################################################################
 ARG NONROOT_USER=jsdev
 ENV NONROOT_USER=${NONROOT_USER}
-RUN useradd -m -s /bin/bash ${NONROOT_USER} \
-    && echo "${NONROOT_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${NONROOT_USER} \
-    && chmod 0440 /etc/sudoers.d/${NONROOT_USER}
+RUN set -eux; \
+    userdel -r ubuntu 2>/dev/null || true; \
+    groupdel ubuntu 2>/dev/null || true; \
+    groupadd --gid 1000 "${NONROOT_USER}"; \
+    useradd --uid 1000 --gid 1000 --create-home --shell /bin/bash "${NONROOT_USER}"; \
+    echo "${NONROOT_USER} ALL=(ALL) NOPASSWD:ALL" > "/etc/sudoers.d/${NONROOT_USER}"; \
+    chmod 0440 "/etc/sudoers.d/${NONROOT_USER}"
 
 ###############################################################################
 # (9) Set default shell to bash
@@ -103,22 +117,22 @@ RUN cp /etc/skel/.bashrc ${HOME}/.bashrc \
 ###############################################################################
 # (13) Add shell aliases
 ###############################################################################
-RUN echo -e '\
-alias ll="ls -la"\n\
-alias la="ls -A"\n\
-alias l="ls -CF"\n\
-alias gs="git status"\n\
-alias ga="git add"\n\
-alias gp="git push"\n\
-alias gl="git log"\n\
-alias rm="rm -i"\n\
-alias cp="cp -i"\n\
-alias mv="mv -i"\n\
-alias nano="nano -c"\n\
-alias ..="cd .."\n\
-alias ...="cd ../.."\n\
-alias ....="cd ../../.."\n\
-' >> ${HOME}/.bash_aliases
+RUN printf '%s\n' \
+    'alias ll="ls -la"' \
+    'alias la="ls -A"' \
+    'alias l="ls -CF"' \
+    'alias gs="git status"' \
+    'alias ga="git add"' \
+    'alias gp="git push"' \
+    'alias gl="git log"' \
+    'alias rm="rm -i"' \
+    'alias cp="cp -i"' \
+    'alias mv="mv -i"' \
+    'alias nano="nano -c"' \
+    'alias ..="cd .."' \
+    'alias ...="cd ../.."' \
+    'alias ....="cd ../../.."' \
+    >> ${HOME}/.bash_aliases
 
 ###############################################################################
 # (14) Configure nano with syntax highlighting for the user

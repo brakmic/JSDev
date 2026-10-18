@@ -6,195 +6,106 @@
 
 ## Overview
 
-JSDev is a streamlined Docker image tailored for JavaScript, TypeScript, and Node.js development. Built on Ubuntu 22.04, it provides a robust and customizable environment, equipping developers with all the essential tools to build, test, and deploy modern web applications efficiently.
+JSDev is a development image for JavaScript, TypeScript, and Node.js. It is
+built on Ubuntu 24.04 with Node.js 24, pnpm, and a set of global development
+tools.
 
-For developers who require Docker tools within their development environment, an extended version of this image is also available, integrating essential Docker utilities seamlessly.
+An extended image adds Docker Engine, Buildx, Compose, and Chrome for Puppeteer.
+
+For pure PureScript development, see [PSDev](https://github.com/brakmic/PSDev).
 
 ## Features
 
-### Base Image: `brakmic/jsdev:latest`
+### Base image: `brakmic/jsdev:latest`
 
-- **Ubuntu 22.04 Base:** Reliable and up-to-date operating system.
-- **Node.js v22:** Latest stable version for cutting-edge JavaScript features.
-- **pnpm Package Manager:** Fast and efficient package management.
-- **Global Development Tools:**
-  - TypeScript
-  - ts-node
-  - ESLint
-  - Prettier
-  - node-gyp
-- **Non-Root User:** `jsdev` user with passwordless sudo for enhanced security.
-- **Enhanced Terminal Experience:**
-  - Nano with syntax highlighting
-  - Custom shell aliases for productivity
-  - Colorized prompt for better readability
-- **Development Ready:** Pre-installed build essentials, Git, Git LFS, Python3, and more.
+- Ubuntu 24.04
+- Node.js 24
+- pnpm 12.14.0
+- Global tools: TypeScript 5, ts-node 10, tsx 4, ESLint 9, Prettier 3, node-gyp 13
+- Non-root user `jsdev` with UID 1000 and passwordless sudo
+- Build essentials, Git, Git LFS, Python 3
+- Nano with syntax highlighting, shell aliases, colorized prompt
 
-### Extended Image: `brakmic/jsdev-docker:latest`
+### Extended image: `brakmic/jsdev-docker:latest`
 
-- **Includes All Features of `brakmic/jsdev:latest`**
-- **Docker Tools Installed:**
-  - **Docker Engine (`docker-ce`):** Core Docker functionality for container management.
-  - **Docker CLI (`docker-ce-cli`):** Command-line interface for interacting with Docker.
-  - **Containerd (`containerd.io`):** High-level container runtime.
-  - **Docker Buildx Plugin (`docker-buildx-plugin`):** Advanced builder CLI plugin for multi-platform builds.
-  - **Docker Compose Plugin (`docker-compose-plugin`):** Tool for defining and running multi-container Docker applications.
-- **Configured Docker Group:**
-  - The `jsdev` user is added to the `docker` group, allowing Docker commands to be executed without `sudo`.
+- Everything from the base image
+- Docker Engine, Docker CLI, containerd, Buildx, and Compose plugins
+- The `jsdev` user is a member of the `docker` group
+- Chrome installed for Puppeteer
 
-## Getting Started
+## Getting started
 
-### Prerequisites
-
-- [Docker](https://www.docker.com/get-started) installed on your machine.
-- (Optional) [Visual Studio Code](https://code.visualstudio.com/) with the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension for an integrated development experience.
-
-### Pull the Docker Images
-
-#### Pull the Base Image
-
-```bash
+```sh
 docker pull brakmic/jsdev:latest
-```
-
-#### Pull the Extended Image (with Docker Tools)
-
-```bash
-docker pull brakmic/jsdev-docker:latest
-```
-
-### Running the Containers
-
-#### Running the Base JSDev Container
-
-To start a container using the `jsdev` image:
-
-```bash
 docker run -it --name my-jsdev-container brakmic/jsdev:latest
 ```
 
-This command will launch an interactive bash shell within the container.
+Extended image:
 
-#### Running the Extended JSDev Docker Container
-
-To start a container using the `jsdev-docker` image with Docker tools:
-
-```bash
+```sh
+docker pull brakmic/jsdev-docker:latest
 docker run -it --name my-jsdev-docker-container brakmic/jsdev-docker:latest
 ```
 
-This command will launch an interactive bash shell within the container, with Docker tools installed and configured for the `jsdev` user.
+The extended image needs the Docker daemon of the host, for example by mounting
+the socket:
 
-### Using with VS Code Dev Containers
+```sh
+docker run -it -v /var/run/docker.sock:/var/run/docker.sock brakmic/jsdev-docker:latest
+```
 
-To leverage the full potential of the JSDev Docker images within Visual Studio Code:
+Docker-in-Docker is also possible when the container runs privileged.
 
-1. **Create a `.devcontainer` Directory:**
+## Image tags
 
-   In the root of your project, create a `.devcontainer` folder.
+Both images are published with these tags:
 
-2. **Add `devcontainer.json`:**
+- `latest`
+- `1.0`
+- `1.0.0`
+- `node24`
 
-   Inside `.devcontainer`, create a `devcontainer.json` file with the following content:
+The `jsdev` image is published for `amd64` and `arm64`. The `jsdev-docker` image
+is published for `amd64`.
 
-   ```json
-   {
-     "name": "JSDev Container",
-     "image": "brakmic/jsdev:latest", // Use "brakmic/jsdev-docker:latest" if Docker tools are needed
-     "workspaceFolder": "/workspace",
-     "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
-     "customizations": {
-       "vscode": {
-         "settings": {
-           "files.exclude": {
-             "**/.git": true,
-             "**/.DS_Store": true
-           }
-         }
-       }
-     },
-     "mounts": [
-       "source=${localWorkspaceFolder}/.devcontainer/setup-workspace.mjs,target=/workspace/.devcontainer/setup-workspace.mjs,type=bind"
-     ],
-     "postCreateCommand": "node /workspace/.devcontainer/setup-workspace.mjs && ln -sf /workspace/dev.code-workspace /home/jsdev/.vscode-server/dev.code-workspace",
-     "remoteUser": "jsdev"
-   }
-   ```
+## Dev containers
 
-   - **Note:** If you intend to use Docker tools within the Dev Container, update the `"image"` field to `"brakmic/jsdev-docker:latest"`.
+The repository contains `.devcontainer/devcontainer.json`, which builds the
+local Dockerfile. In VS Code, run **Dev Containers: Reopen in Container**.
 
-3. **Add Setup Scripts:**
+To use the published image in another project, add a `.devcontainer/devcontainer.json`:
 
-   Place any necessary setup scripts (e.g., `setup-workspace.mjs`) inside the `.devcontainer` directory.
+```json
+{
+  "name": "JSDev",
+  "image": "brakmic/jsdev:latest",
+  "remoteUser": "jsdev",
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+}
+```
 
-4. **Open in VS Code:**
+Use `brakmic/jsdev-docker:latest` when Docker tools are needed.
 
-   Open your project in VS Code. You should see a prompt to reopen the project in a Dev Container. Confirm to start using the JSDev environment.
+## Build the images
 
-## Customization
+```sh
+docker build -t jsdev:local .
+docker build --build-arg JSDEV_BASE=jsdev:local -f with-docker.Dockerfile -t jsdev-docker:local .
+```
 
-Feel free to modify the Dockerfiles or the `devcontainer.json` to suit your specific development needs. Whether it's adding new global packages, configuring additional tools, or adjusting user settings, JSDev is designed to be flexible and adaptable.
+## Publishing
 
-## Contributing
+The release workflow publishes to GHCR and Docker Hub when a `v*` tag is pushed.
+Docker Hub automated builds are not used; GitHub Actions is the only publisher.
 
-Contributions are welcome! If you have suggestions, bug fixes, or improvements, please open an issue or submit a pull request.
+Repository secrets:
 
-## 🐳 **Additional Information for the Extended Image**
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
 
-The extended Docker image `brakmic/jsdev-docker:latest` is designed for developers who require Docker functionalities within their development environment. This setup is ideal for those working on containerized applications, microservices, or requiring Docker for testing and deployment processes.
+The tag must match `JSDEV_VERSION` in the Dockerfile.
 
-### **Installed Docker Tools:**
-
-- **Docker Engine (`docker-ce`):** Enables containerization and management of Docker containers.
-- **Docker CLI (`docker-ce-cli`):** Provides the command-line interface to interact with Docker.
-- **Containerd (`containerd.io`):** An industry-standard container runtime.
-- **Docker Buildx Plugin (`docker-buildx-plugin`):** Facilitates advanced image building capabilities, including multi-platform builds.
-- **Docker Compose Plugin (`docker-compose-plugin`):** Simplifies the management of multi-container Docker applications.
-
-### **User Configuration:**
-
-- **Docker Group Membership:** The `jsdev` user is part of the `docker` group, allowing seamless execution of Docker commands without the need for `sudo`. Verify by running:
-
-  ```bash
-  groups
-  ```
-
-  Expected output should include `docker`:
-
-  ```
-  jsdev sudo docker
-  ```
-
-### **Usage Example with Docker Tools:**
-
-After running the extended container, you can verify Docker installation:
-
-1. **Check Docker Version:**
-
-   ```bash
-   docker --version
-   ```
-
-   *Expected Output:*
-
-   ```
-   Docker version 20.10.7, build f0df350
-   ```
-
-2. **Run a Test Docker Container:**
-
-   ```bash
-   docker run hello-world
-   ```
-
-   *Expected Output:*
-
-   ```
-   Hello from Docker!
-   This message shows that your installation appears to be working correctly.
-   ...
-   ```
-   
 ## License
 
-This project is licensed under the [MIT License](./LICENSE).
+MIT

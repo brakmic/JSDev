@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - ".github/**"
+      - "*.md"
+      - "LICENSE"
+      - ".gitignore"
+      - ".dockerignore"
+      - ".gitattributes"
+  pull_request:
+    paths-ignore:
+      - ".github/**"
+      - "*.md"
+      - "LICENSE"
+      - ".gitignore"
+      - ".dockerignore"
+      - ".gitattributes"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+
+jobs:
+  images:
+    name: Images
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build base image
+        run: |
+          docker build \
+            --build-arg JSDEV_IMAGE_REVISION="${GITHUB_SHA}" \
+            -t jsdev:ci \
+            .
+
+      - name: Verify toolchain
+        run: |
+          docker run --rm jsdev:ci bash -lc '
+            node --version
+            pnpm --version
+            tsc --version
+            tsx --version
+            prettier --version
+            node-gyp --version
+          '
+
+      - name: Compile and run a TypeScript sample
+        run: |
+          docker run --rm jsdev:ci bash -lc '
+            mkdir -p /tmp/ts && cd /tmp/ts
+            printf "const answer: number = 42;\nconsole.log(answer);\n" > main.ts
+            tsc --target ES2022 main.ts
+            node main.js
+          '
+
+      - name: Build Docker-enabled image
+        run: |
+          docker build \
+            --build-arg JSDEV_BASE=jsdev:ci \
+            --build-arg JSDEV_IMAGE_REVISION="${GITHUB_SHA}" \
+            -f with-docker.Dockerfile \
+            -t jsdev-docker:ci \
+            .
+
+      - name: Verify Docker tools and Chrome
+        run: |
+          docker run --rm jsdev-docker:ci bash -lc '
+            docker --version
+            docker compose version
+            node --version
+            test -n "$(find /home/jsdev/.cache/puppeteer -name chrome -type f | head -1)"
+          '

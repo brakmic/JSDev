@@ -51,6 +51,3 @@ bower_components/
 
 # MacOS system files
 .DS_Store
-
-# Dev Container configuration
-.devcontainer/
